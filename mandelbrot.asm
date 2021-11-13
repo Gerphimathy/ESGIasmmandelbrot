@@ -70,7 +70,7 @@ mov     dword[screen],eax
 
 mov rdi,qword[display_name]
 mov esi,dword[screen]
-call XRootWindow
+call XRootWindow ;return the root window of the specified screen
 mov rbx,rax
 
 mov rdi,qword[display_name]
@@ -82,33 +82,33 @@ mov r9,400	; hauteur
 push 0xFFFFFF	; background  0xRRGGBB
 push 0x00FF00
 push 1
-call XCreateSimpleWindow
+call XCreateSimpleWindow; crée une sous- fenêtre InputOutput non mappée pour une fenêtre parent spécifiée, renvoie l'ID de fenêtre de la fenêtre créée et oblige le serveur X à générer un événement CreateNotify .
 mov qword[window],rax
 
 mov rdi,qword[display_name]
 mov rsi,qword[window]
 mov rdx,131077 ;131072
-call XSelectInput
+call XSelectInput ;  demande que le serveur X rapporte les événements associés au masque d'événement spécifié.
 
 mov rdi,qword[display_name]
 mov rsi,qword[window]
-call XMapWindow
+call XMapWindow ; mappe la fenêtre et toutes ses sous-fenêtres qui ont eu des demandes de mappage
 
 mov rsi,qword[window]
 mov rdx,0
 mov rcx,0
-call XCreateGC
+call XCreateGC ; crée un contexte graphique et renvoie un GC.
 mov qword[gc],rax
 
 mov rdi,qword[display_name]
 mov rsi,qword[gc]
 mov rdx,0x000000	; Couleur du crayon
-call XSetForeground
+call XSetForeground ; Spécifie le premier plan que vous souhaitez définir pour le GC spécifié
 
 boucle: ; boucle de gestion des évènements
 mov rdi,qword[display_name]
 mov rsi,event
-call XNextEvent
+call XNextEvent ; copie le premier événement de la file d'attente d'événements dans la structure XEvent spécifiée , puis le supprime de la file d'attente.
 
 cmp dword[event],ConfigureNotify	; à l'apparition de la fenêtre
 je dessin							; on saute au label 'dessin'
@@ -140,7 +140,7 @@ mov ecx,dword[x1]	; coordonnée source en x
 mov r8d,dword[y1]	; coordonnée source en y
 mov r9d,dword[x2]	; coordonnée destination en x
 push qword[y2]		; coordonnée destination en y
-call XDrawLine
+call XDrawLine ; utilise les composants du GC spécifié pour tracer une ligne entre l'ensemble de points spécifié (x1, y1) et (x2, y2)
 
 ;couleur de la ligne 2
 mov rdi,qword[display_name]
@@ -209,7 +209,7 @@ jmp flush
 
 flush:
 mov rdi,qword[display_name]
-call XFlush
+call XFlush ; vide le tampon de sortie.
 jmp boucle
 mov rax,34
 syscall
