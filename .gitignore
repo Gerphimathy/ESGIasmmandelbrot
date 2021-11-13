@@ -1,3 +1,7 @@
 ##Ignore IntelliJ idea temporary project files
 
 .idea
+
+##Ignore temporary compilation steps
+*.lst
+*.o
