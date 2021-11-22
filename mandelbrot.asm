@@ -59,6 +59,10 @@ zim: dd 0
 cre: dd 0
 cim: dd 0
 
+; Coordonees Pour Dessin
+x: dd 0
+y: dd 0
+
 section .text
 	
 ;##################################################
@@ -143,8 +147,9 @@ mov r15d, 0 ; x = 0
 mov byte[maxIter], 50
 
 forEachColumn: ;for (x = 0; x < width; x++)
+    mov r14d, 0
     forEachLine: ;for (y = 0; y < height; y++)
-
+    mov rcx, 0
     mov dword[cre], r15d
     mov dword[cim], r14d
     ; c = x (r15) + y(r14)i
@@ -156,6 +161,7 @@ forEachColumn: ;for (x = 0; x < width; x++)
     mov r13b, 0
     ; iteration = 0
 
+        ; TODO: This loop always break on the first element, need to check if it properly reset between iiterations of the loop
         boucleDessin: ;do
         mov rcx, 0
         ;push dword[zre] ; temp = zre
@@ -231,18 +237,36 @@ forEachColumn: ;for (x = 0; x < width; x++)
 
         ; rcx = zre*zre + zim*zim
 
-        ; while zre*zre + zim*zim < 4
+        ; while zre*zre + zim*zim < 4 and i < maxIter
         cmp rcx, 4
-        jb boucleDessin
+        jae finBoucleDessin
         ; and i < maxIter
         cmp r13b, byte[maxIter]
-        jb boucleDessin
+        jae finBoucleDessin
+        jmp boucleDessin
 
-    cmp r13, maxIter ;if i = maxIter
+        finBoucleDessin:
+        cmp r13b, byte[maxIter] ;if i = maxIter
+        jne finForEach
+
+    cmp r13b, byte[maxIter] ;if i = maxIter
     jne finForEach
+    ;;; Add Point
+    ; Point Color
+    mov rdi,qword[display_name]
+    mov rsi,qword[gc]
+    mov edx,0x000000	; Couleur: Noir
+    call XSetForeground
     ; Draw Point
-        ; Point Color
-
+    mov rdi,qword[display_name]
+    mov rsi,qword[window]
+    mov rdx,qword[gc]
+    mov dword[x], r15d
+    mov dword[y], r14d
+    mov ecx,dword[x]	; coordonnée source en x
+    mov r8d,dword[y]	; coordonnée source en y
+    call XDrawPoint
+    ; Fin Point
 
     finForEach:
     inc r14d
