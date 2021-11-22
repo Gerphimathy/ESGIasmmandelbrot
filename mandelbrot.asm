@@ -66,6 +66,7 @@ section .text
 ;##################################################
 
 main:
+; TODO: Name display
 xor     rdi,rdi
 call    XOpenDisplay	; Création de display
 mov     qword[display_name],rax	; rax=nom du display
