@@ -142,8 +142,8 @@ mov r15d, 0 ; x = 0
 ; TODO: Remove this and scan for the value on program start instead
 mov byte[maxIter], 50
 
-forEachLine: ;for (x = 0; x < width; x++)
-    forEachColumn: ;for (y = 0; y < height; y++)
+forEachColumn: ;for (x = 0; x < width; x++)
+    forEachLine: ;for (y = 0; y < height; y++)
 
     mov dword[cre], r15d
     mov dword[cim], r14d
@@ -242,26 +242,15 @@ forEachLine: ;for (x = 0; x < width; x++)
     jne finForEach
     ; Draw Point
         ; Point Color
-        mov rdi,qword[display_name]
-        mov rsi,qword[gc]
-        mov edx,0x000000	; Black
-        call XSetForeground
 
-        ;;;dessin du point
-        mov rdi,qword[display_name]
-        mov rsi,qword[window]
-        mov rdx,qword[gc]
-        mov ecx,r15d	; coordonnée source en x
-        mov r8d,r14d	; coordonnée source en y
-        call XDrawPoint
 
     finForEach:
     inc r14d
     cmp r14d, dword[height]
-    jb forEachColumn
+    jb forEachLine
 inc r15d
 cmp r15d, dword[width]
-jb forEachLine
+jb forEachColumn
 
 ;#########################################
 ;#		EXEMPLE UTILISATION XDRAWPOINT   #
