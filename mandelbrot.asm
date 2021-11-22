@@ -47,6 +47,11 @@ gc:		resq	1
 maxIter: resb 1
 sqr: resq 2
 
+zoom: resd 1
+
+imageX: resq 1
+imageY: resq 1
+
 section .data
 
 event:		times	24 dq 0
@@ -63,6 +68,12 @@ cim: dd 0
 x: dd 0
 y: dd 0
 
+; Coordonees de la fractale
+x1: dd -2.1
+x2: dd 0.6
+y1: dd -1.2
+y2: dd 1.2
+
 section .text
 	
 ;##################################################
@@ -70,7 +81,7 @@ section .text
 ;##################################################
 
 main:
-; TODO: Name display
+; TODO (Priorité Minimale): Name display
 xor     rdi,rdi
 call    XOpenDisplay	; Création de display
 mov     qword[display_name],rax	; rax=nom du display
@@ -91,9 +102,12 @@ mov rsi,rbx
 mov rdx,10
 mov rcx,10
 
-; TODO: Remove this and scan for the values on program start instead
+; TODO (Priorité Maximale): Have this be proportional to the zoom
+;définir image_x = (x2 - x1) * zoom
+;définir image_y = (y2 - y1) * zoom
 mov r8,400	; largeur
 mov r9,400	; hauteur
+mov dword[zoom], 100
 
 push 0xFFFFFF	; background  0xRRGGBB
 push 0x00FF00
@@ -139,11 +153,11 @@ jmp boucle
 dessin:
 
 
-
+; TODO (Priorité Maximale): Remplacer par imageX et imageY
 mov r14d, 0 ; y = 0
 mov r15d, 0 ; x = 0
 
-; TODO: Remove this and scan for the value on program start instead
+
 
 mov byte[maxIter], 50
 
@@ -151,6 +165,9 @@ forEachColumn: ;for (x = 0; x < width; x++)
     mov r14d, 0
     forEachLine: ;for (y = 0; y < height; y++)
     mov rcx, 0
+    ; TODO (Priorité Maximale): Replace this so that it's proportional to zoom
+    ;définir c_r = x / zoom + x1
+    ;définir c_i = y / zoom + y1
     mov dword[cre], r15d
     mov dword[cim], r14d
     ; c = x (r15) + y(r14)i
@@ -161,9 +178,6 @@ forEachColumn: ;for (x = 0; x < width; x++)
 
     mov r13b, 0
     ; iteration = 0
-
-        ; TODO: This loop always break on the first element, need to check if it properly reset between iiterations of the loop
-
         boucleDessin: ;do
         mov rcx, 0
         mov r10d, dword[zre]
@@ -185,7 +199,7 @@ forEachColumn: ;for (x = 0; x < width; x++)
         mov [rbx+DWORD], edx
         ; sqr[1] = zim²
 
-        ; TODO: Enforcer une taille limite pour éviter un dépassement de capacité
+        ; TODO (Priorité Minimale): Enforcer une taille limite pour éviter un dépassement de capacité
         mov rax, qword[sqr] ; zre²
         sub rax, qword[sqr+QWORD] ; - zim²
         add rax, r15 ; + cre
@@ -262,7 +276,7 @@ forEachColumn: ;for (x = 0; x < width; x++)
     mov r8d,dword[y]	; coordonnée source en y
     call XDrawPoint
     ; Fin Point
-
+; TODO (Priorité Maximale): Comparer avec imageX et imageY
     finForEach:
     inc r14d
     cmp r14d, dword[height]
