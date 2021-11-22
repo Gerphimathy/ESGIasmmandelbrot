@@ -11,6 +11,8 @@ extern XCreateGC
 extern XSetForeground
 extern XDrawLine
 extern XNextEvent
+extern XDrawPoint
+; XDrawPoint arguments: (display, d, gc, x, y)
 
 ; external functions from stdio library (ld-linux-x86-64.so.2)    
 extern printf
@@ -46,10 +48,8 @@ section .data
 
 event:		times	24 dq 0
 
-x1:	dd	0
-x2:	dd	0
-y1:	dd	0
-y2:	dd	0
+x:	dd	0
+y:	dd	0
 
 section .text
 	
@@ -122,85 +122,35 @@ jmp boucle
 ;#########################################
 dessin:
 
-;couleur de la ligne 1
-mov rdi,qword[display_name]
-mov rsi,qword[gc]
-mov edx,0xFF0000	; Couleur du crayon ; rouge
-call XSetForeground
-; coordonnées de la ligne 1
-mov dword[x1],50
-mov dword[y1],50
-mov dword[x2],200
-mov dword[y2],350
-; dessin de la ligne 1
-mov rdi,qword[display_name]
-mov rsi,qword[window]
-mov rdx,qword[gc]
-mov ecx,dword[x1]	; coordonnée source en x
-mov r8d,dword[y1]	; coordonnée source en y
-mov r9d,dword[x2]	; coordonnée destination en x
-push qword[y2]		; coordonnée destination en y
-call XDrawLine ; utilise les composants du GC spécifié pour tracer une ligne entre l'ensemble de points spécifié (x1, y1) et (x2, y2)
+;#########################################
+;#		EXEMPLE UTILISATION XDRAWPOINT   #
+;#########################################
 
-;couleur de la ligne 2
-mov rdi,qword[display_name]
-mov rsi,qword[gc]
-mov edx,0x00FF00	; Couleur du crayon ; vert
-call XSetForeground
-; coordonnées de la ligne 2
-mov dword[x1],50
-mov dword[y1],350
-mov dword[x2],200
-mov dword[y2],50
-; dessin de la ligne 2
-mov rdi,qword[display_name]
-mov rsi,qword[window]
-mov rdx,qword[gc]
-mov ecx,dword[x1]	; coordonnée source en x
-mov r8d,dword[y1]	; coordonnée source en y
-mov r9d,dword[x2]	; coordonnée destination en x
-push qword[y2]		; coordonnée destination en y
-call XDrawLine
+;;;couleur du point exemple 1
 
-;couleur de la ligne 3
-mov rdi,qword[display_name]
-mov rsi,qword[gc]
-mov edx,0x0000FF	; Couleur du crayon ; bleu
-call XSetForeground
-; coordonnées de la ligne 3	
-mov dword[x1],275
-mov dword[y1],50
-mov dword[x2],275
-mov dword[y2],350
-; dessin de la ligne 3
-mov rdi,qword[display_name]
-mov rsi,qword[window]
-mov rdx,qword[gc]
-mov ecx,dword[x1]	; coordonnée source en x
-mov r8d,dword[y1]	; coordonnée source en y
-mov r9d,dword[x2]	; coordonnée destination en x
-push qword[y2]		; coordonnée destination en y
-call XDrawLine
+;mov rdi,qword[display_name]
+;mov rsi,qword[gc]
+;mov edx,0xFF0000	; Couleur du crayon ; rouge
+;call XSetForeground
 
-;couleur de la ligne 4
-mov rdi,qword[display_name]
-mov rsi,qword[gc]
-mov edx,0xFF00FF	; Couleur du crayon ; violet
-call XSetForeground
-; coordonnées de la ligne 4	
-mov dword[x1],350
-mov dword[y1],50
-mov dword[x2],350
-mov dword[y2],350
-; dessin de la ligne 4
-mov rdi,qword[display_name]
-mov rsi,qword[window]
-mov rdx,qword[gc]
-mov ecx,dword[x1]	; coordonnée source en x
-mov r8d,dword[y1]	; coordonnée source en y
-mov r9d,dword[x2]	; coordonnée destination en x
-push qword[y2]		; coordonnée destination en y
-call XDrawLine
+
+;;;coordonnées du point exemple 1
+
+;mov dword[x],50
+;mov dword[y],50
+
+;;;dessin du point test
+;mov rdi,qword[display_name]
+;mov rsi,qword[window]
+;mov rdx,qword[gc]
+;mov ecx,dword[x]	; coordonnée source en x
+;mov r8d,dword[y]	; coordonnée source en y
+;call XDrawPoint
+
+;##################################################
+;#		FIN EXEMPLE UTILISATION XDRAWPOINT        #
+;##################################################
+
 
 ; ############################
 ; # FIN DE LA ZONE DE DESSIN #
