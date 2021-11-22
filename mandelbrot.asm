@@ -144,6 +144,7 @@ mov r14d, 0 ; y = 0
 mov r15d, 0 ; x = 0
 
 ; TODO: Remove this and scan for the value on program start instead
+
 mov byte[maxIter], 50
 
 forEachColumn: ;for (x = 0; x < width; x++)
@@ -162,11 +163,11 @@ forEachColumn: ;for (x = 0; x < width; x++)
     ; iteration = 0
 
         ; TODO: This loop always break on the first element, need to check if it properly reset between iiterations of the loop
+
         boucleDessin: ;do
         mov rcx, 0
-        ;push dword[zre] ; temp = zre
-        ; Donne Erreur d'assemblage, utilisation de r10d
         mov r10d, dword[zre]
+        push r10
 
         ; zre = zre*zre - zim*zim + cre
 
@@ -194,11 +195,7 @@ forEachColumn: ;for (x = 0; x < width; x++)
 
 
         ; zim = 2*zim*temp + cim
-
-
-        ;pop ebx ; ebx = temp
-        ; Donne Erreur d'assemblage, utilisation de r10d
-
+        pop r10
         mov ebx, r10d
         shl ebx, 1 ; ebx *= 2
 
@@ -214,10 +211,9 @@ forEachColumn: ;for (x = 0; x < width; x++)
         ; zim = 2*zim*temp + cim
 
 
-        inc r13 ; i++
+        inc r13b ; i++
 
-        ; rax = zre*zre + zim*zim
-
+        ; rcx = zre*zre + zim*zim
         mov rbx, sqr ; rbx --> sqr[0]
         mov eax, dword[zre]
         mul dword[zre]
@@ -225,21 +221,20 @@ forEachColumn: ;for (x = 0; x < width; x++)
         mov [rbx+DWORD], edx
         ; sqr[0] = zre²
 
-        mov rbx, sqr+QWORD ; rbx --> sqr[1]
-        mov eax, dword[zim]
-        mul dword[zim]
-        mov [rbx], eax
-        mov [rbx+DWORD], edx
-        ; sqr[1] = zim²
+         mov rbx, sqr+QWORD ; rbx --> sqr[1]
+         mov eax, dword[zim]
+         mul dword[zim]
+         mov [rbx], eax
+         mov [rbx+DWORD], edx
+         ; sqr[1] = zim²
 
         mov rcx, qword[sqr] ; rcx = zre²
         add rcx, qword[sqr+QWORD] ; rcx = zre² + zim²
-
         ; rcx = zre*zre + zim*zim
 
         ; while zre*zre + zim*zim < 4 and i < maxIter
         cmp rcx, 4
-        jae finBoucleDessin
+        jge finBoucleDessin
         ; and i < maxIter
         cmp r13b, byte[maxIter]
         jae finBoucleDessin
