@@ -2,6 +2,7 @@
 
 .idea
 
-##Ignore temporary compilation steps
+##Ignore compilation middle steps
+
 *.lst
 *.o
