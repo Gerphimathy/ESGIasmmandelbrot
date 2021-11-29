@@ -49,6 +49,7 @@ sqr: resq 2
 
 zoom: resd 1
 
+; largeur et hauteur
 imageX: resq 1
 imageY: resq 1
 
@@ -67,6 +68,7 @@ cim: dd 0
 ; Coordonees Pour Dessin
 x: dd 0
 y: dd 0
+i: db 0
 
 ; Coordonees de la fractale
 x1: dd -2.1
@@ -78,7 +80,7 @@ y2: dd 1.2
 
 zero: dd 0.0
 deux: dd 2.0
-quatre: dd 4.0
+quatre: dq 4.0
 
 section .text
 	
@@ -112,8 +114,6 @@ mov rcx,10
 
 mov dword[zoom], 100
 
-
-; TODO (Priorité Maximale): Test This
 ;définir image_x = (x2 - x1) * zoom
 ;définir image_y = (y2 - y1) * zoom
 
@@ -141,9 +141,11 @@ mulss xmm1, xmm5
 ; xmm0 = (x2-x1)*zoom
 ; xmm1 = (y2-y1)*zoom
 
-cvtss2si r8,xmm0	; largeur: conversion de xmm0 en entier
-cvtss2si r9,xmm1	; hauteur: conversion de xmm1 en entier
+cvtss2si r8,xmm0	; largeur (imageX): conversion de xmm0 en entier
+cvtss2si r9,xmm1	; hauteur (imageY): conversion de xmm1 en entier
 
+mov qword[imageX], r8
+mov qword[imageY], r9
 
 push 0xFFFFFF	; background  0xRRGGBB
 push 0x00FF00
@@ -188,22 +190,21 @@ jmp boucle
 ;#########################################
 dessin:
 
-mov r14d, 0 ; y = 0
-mov r15d, 0 ; x = 0
+mov dword[x], 0 ; x = 0
+mov dword[y], 0 ; y = 0
+mov byte[i], 0 ; i = 0
 
 mov byte[maxIter], 50
 
 forEachColumn: ;for (x = 0; x < width; x++)
-    mov r14d, 0
+    mov dword[y], 0
     forEachLine: ;for (y = 0; y < height; y++)
-    ; TODO (Priorité Maximale): Replace this so that it's proportional to zoom
-
     ; cre = x / zoom + x1
     ; cim = y / zoom + y1
-
+    ; TODO (Prio: 100% MAX): Les calculs de CRE/CIM/ZRE/ZIM ne marchent pas
     cvtsi2ss xmm0, [zoom]
-    cvtsi2ss xmm1, r15d ; xmm1 = x
-    cvtsi2ss xmm2, r14d ; xmm2 = y
+    cvtsi2ss xmm1, [x] ; xmm1 = x
+    cvtsi2ss xmm2, [y] ; xmm2 = y
 
     divss xmm1, xmm0 ; xmm1 = x/zoom
     divss xmm2, xmm0 ; xmm1 = y/zoom
@@ -221,7 +222,7 @@ forEachColumn: ;for (x = 0; x < width; x++)
     movss [zim], xmm0
     ; z = 0 + 0i
 
-    mov r13b, 0
+    mov byte[i], 0
     ; iteration = 0
         boucleDessin: ;do
         movss xmm6, [zre] ; xmm6 --> temp = zre
@@ -266,7 +267,7 @@ forEachColumn: ;for (x = 0; x < width; x++)
         ; zim = 2*zim*temp + cim
 
 
-        inc r13b ; i++
+        inc byte[i] ; i++
 
         ; xmm5 = zre*zre + zim*zim
          cvtss2sd xmm0, [zre]
@@ -291,20 +292,24 @@ forEachColumn: ;for (x = 0; x < width; x++)
         ; xmm5 = zre*zre + zim*zim
 
         ; while zre*zre + zim*zim < 4 and i < maxIter
+
         ucomisd xmm5, [quatre]
-        jge finBoucleDessin
+        jae finBoucleDessin
         ; and i < maxIter
+        mov r13b, byte[i]
         cmp r13b, byte[maxIter]
         jae finBoucleDessin
         jmp boucleDessin
 
         finBoucleDessin:
+        mov r13b, byte[i]
         cmp r13b, byte[maxIter] ;if i = maxIter
         jne finForEach
 
+    mov r13b, byte[i]
     cmp r13b, byte[maxIter] ;if i = maxIter
     jne finForEach
-    ;;; Add Point
+    ;;; Add Point TODO (Priorite Minimale) : Variation de couleurs
     ; Point Color
     mov rdi,qword[display_name]
     mov rsi,qword[gc]
@@ -314,49 +319,21 @@ forEachColumn: ;for (x = 0; x < width; x++)
     mov rdi,qword[display_name]
     mov rsi,qword[window]
     mov rdx,qword[gc]
-    mov dword[x], r15d
-    mov dword[y], r14d
     mov ecx,dword[x]	; coordonnée source en x
     mov r8d,dword[y]	; coordonnée source en y
     call XDrawPoint
     ; Fin Point
     finForEach:
-    inc r14d
-    cmp r14d, r9d
+    inc dword[y]
+    mov r13,0
+    mov r13d, dword[y]
+    cmp r13, qword[imageY]
     jb forEachLine
-inc r15d
-cmp r15d, r8d
+inc dword[x]
+mov r13,0
+mov r13d, dword[x]
+cmp r13, qword[imageX]
 jb forEachColumn
-
-;#########################################
-;#		EXEMPLE UTILISATION XDRAWPOINT   #
-;#########################################
-
-;;;couleur du point exemple 1
-
-;mov rdi,qword[display_name]
-;mov rsi,qword[gc]
-;mov edx,0xFF0000	; Couleur du crayon ; rouge
-;call XSetForeground
-
-
-;;;coordonnées du point exemple 1
-
-;mov dword[x],50
-;mov dword[y],50
-
-;;;dessin du point test
-;mov rdi,qword[display_name]
-;mov rsi,qword[window]
-;mov rdx,qword[gc]
-;mov ecx,dword[x]	; coordonnée source en x
-;mov r8d,dword[y]	; coordonnée source en y
-;call XDrawPoint
-
-;##################################################
-;#		FIN EXEMPLE UTILISATION XDRAWPOINT        #
-;##################################################
-
 
 ; ############################
 ; # FIN DE LA ZONE DE DESSIN #
