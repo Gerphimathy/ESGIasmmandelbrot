@@ -76,6 +76,7 @@ y2: dd 1.2
 
 ; Calculs de flottants:
 
+zero: dd 0.0
 deux: dd 2.0
 quatre: dd 4.0
 
@@ -116,23 +117,23 @@ mov dword[zoom], 100
 ;définir image_x = (x2 - x1) * zoom
 ;définir image_y = (y2 - y1) * zoom
 
-movss xmm0, dword[x2]
-movss xmm1, dword[y2]
+movss xmm0, [x2]
+movss xmm1, [y2]
 
-movss xmm3, dword[x1]
-movss xmm4, dword[y1]
+movss xmm3, [x1]
+movss xmm4, [y1]
 
 ; xmm0 = x2
 ; xmm1 = y2
 ; xmm3 = x1
 ; xmm4 = y1
 
-subsd xmm0, xmm3
-subsd xmm1, xmm4
+subss xmm0, xmm3
+subss xmm1, xmm4
 ; xmm0 = x2-x1
 ; xmm1 = y2-y1
 
-cvtsi2ss xmm5, dword[zoom]
+cvtsi2ss xmm5, [zoom]
 ; xmm5 = zoom: conversion de zoom en float
 
 mulss xmm0, xmm5
@@ -195,102 +196,102 @@ mov byte[maxIter], 50
 forEachColumn: ;for (x = 0; x < width; x++)
     mov r14d, 0
     forEachLine: ;for (y = 0; y < height; y++)
-    mov rcx, 0
     ; TODO (Priorité Maximale): Replace this so that it's proportional to zoom
 
     ; cre = x / zoom + x1
     ; cim = y / zoom + y1
 
-    cvtsi2ss xmm0, dword[zoom]
+    cvtsi2ss xmm0, [zoom]
     cvtsi2ss xmm1, r15d ; xmm1 = x
     cvtsi2ss xmm2, r14d ; xmm2 = y
 
     divss xmm1, xmm0 ; xmm1 = x/zoom
     divss xmm2, xmm0 ; xmm1 = y/zoom
 
-    addss xmm1, x1 ; xmm1 += x1
-    addss xmm2, y1 ; xmm2 += y1
+    addss xmm1, [x1] ; xmm1 += x1
+    addss xmm2, [y1] ; xmm2 += y1
 
-    movss dword[cre], xmm1 ; cre = x / zoom + x
-    movss dword[cim], xmm1 ; cim = y / zoom + y1
+    movss [cre], xmm1 ; cre = x / zoom + x
+    movss [cim], xmm1 ; cim = y / zoom + y1
 
     ; c = cre + cim*i
 
-    movss dword[zre], 0
-    movss dword[zim], 0
+    movss xmm0, [zero]
+    movss [zre], xmm0
+    movss [zim], xmm0
     ; z = 0 + 0i
 
     mov r13b, 0
     ; iteration = 0
         boucleDessin: ;do
-        mov rcx, 0
-        mov xmm6, dword[zre] ; xmm6 --> temp = zre
+        movss xmm6, [zre] ; xmm6 --> temp = zre
 
         ; zre = zre*zre - zim*zim + cre
 
-        cvtss2sd xmm0, dword[zre]
-        movsd qword[sqr], xmm0
+        cvtss2sd xmm0, [zre]
+        movsd [sqr], xmm0
         ; sqr[0] = zre après conversion en 64 bits
 
-        mulsd xmm0, sqr
-        movsd qword[sqr], xmm0
+        mulsd xmm0, [sqr]
+        movsd [sqr], xmm0
         ; sqr[0] = zre²
 
-        cvtss2sd xmm0, dword[zim]
-        movsd qword[sqr+QWORD], xmm0
+        cvtss2sd xmm0, [zim]
+        movsd [sqr+QWORD], xmm0
         ; sqr[1] = zim après conversion en 64 bits
 
-        mulsd xmm0, sqr+QWORD
-        movsd qword[sqr+QWORD], xmm0
+        mulsd xmm0, [sqr+QWORD]
+        movsd [sqr+QWORD], xmm0
         ; sqr[1] = zim²
 
-        movsd xmm0, qword[sqr]
-        subsd xmm0, qword[sqr+DWORD]
+        movsd xmm0, [sqr]
+        subsd xmm0, [sqr+DWORD]
         ; xmm0 = zre² - zim²
-        cvtss2sd xmm1, dword[cre]
+        cvtss2sd xmm1, [cre]
         addsd xmm0, xmm1
         ; xmm0 = zre² - zim² + cre
-        cvtsd2si dword[zre], xmm0
+        cvtsd2ss xmm1, xmm0
+        movss [zre], xmm1
         ; zre = zre² - zim² + cre
 
 
         ; zim = 2*zim*temp + cim
-        mulss xmm6, deux
-        mulss xmm6, zim
+        mulss xmm6, [deux]
+        mulss xmm6, [zim]
         ; xmm6-->temp *= 2*zim
-        addss xmm6, cim
+        addss xmm6, [cim]
         ; xmm6 = 2*zim*temp + cim
 
-        movss dword[zim], xmm6
+        movss [zim], xmm6
         ; zim = 2*zim*temp + cim
 
 
         inc r13b ; i++
 
         ; xmm5 = zre*zre + zim*zim
-         cvtss2sd xmm0, dword[zre]
-         movsd qword[sqr], xmm0
+         cvtss2sd xmm0, [zre]
+         movsd [sqr], xmm0
          ; sqr[0] = zre après conversion en 64 bits
 
-         mulsd xmm0, sqr
-         movsd qword[sqr], xmm0
+         mulsd xmm0, [sqr]
+         movsd [sqr], xmm0
 
         ; sqr[0] = zre²
 
-        cvtss2sd xmm0, dword[zim]
-        movsd qword[sqr+QWORD], xmm0
+        cvtss2sd xmm0, [zim]
+        movsd [sqr+QWORD], xmm0
         ; sqr[1] = zim après conversion en 64 bits
 
-        mulsd xmm0, sqr+QWORD
-        movsd qword[sqr+QWORD], xmm0
+        mulsd xmm0, [sqr+QWORD]
+        movsd [sqr+QWORD], xmm0
          ; sqr[1] = zim²
 
-        movsd xmm5, qword[sqr]
-        addsd xmm5, qword[sqr+QWORD]
+        movsd xmm5, [sqr]
+        addsd xmm5, [sqr+QWORD]
         ; xmm5 = zre*zre + zim*zim
 
         ; while zre*zre + zim*zim < 4 and i < maxIter
-        ucomisd xmm5, quatre
+        ucomisd xmm5, [quatre]
         jge finBoucleDessin
         ; and i < maxIter
         cmp r13b, byte[maxIter]
