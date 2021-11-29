@@ -187,14 +187,14 @@ forEachColumn: ;for (x = 0; x < width; x++)
 
         mov rbx, sqr ; rbx --> sqr[0]
         mov eax, dword[zre]
-        mul dword[zre]
+        imul dword[zre]
         mov [rbx], eax
         mov [rbx+DWORD], edx
         ; sqr[0] = zre²
 
         mov rbx, sqr+QWORD ; rbx --> sqr[1]
         mov eax, dword[zim]
-        mul dword[zim]
+        imul dword[zim]
         mov [rbx], eax
         mov [rbx+DWORD], edx
         ; sqr[1] = zim²
@@ -214,7 +214,7 @@ forEachColumn: ;for (x = 0; x < width; x++)
         shl ebx, 1 ; ebx *= 2
 
         mov eax, dword[zim]
-        mul ebx
+        imul ebx
         mov ecx, eax ; ecx =  ebx*zim
         ; ecx = 2*temp*zim
         ; TODO: Enforcer une taille limite pour éviter un dépassement de capacité
@@ -230,14 +230,14 @@ forEachColumn: ;for (x = 0; x < width; x++)
         ; rcx = zre*zre + zim*zim
         mov rbx, sqr ; rbx --> sqr[0]
         mov eax, dword[zre]
-        mul dword[zre]
+        imul dword[zre]
         mov [rbx], eax
         mov [rbx+DWORD], edx
         ; sqr[0] = zre²
 
          mov rbx, sqr+QWORD ; rbx --> sqr[1]
          mov eax, dword[zim]
-         mul dword[zim]
+         imul dword[zim]
          mov [rbx], eax
          mov [rbx+DWORD], edx
          ; sqr[1] = zim²
