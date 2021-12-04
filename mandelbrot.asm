@@ -58,12 +58,12 @@ section .data
 event:		times	24 dq 0
 
 ; Nombre Complexe Z
-zre: dd 0
-zim: dd 0
+zre: dq 0
+zim: dq 0
 
 ; Nombre Complexe C
-cre: dd 0
-cim: dd 0
+cre: dq 0
+cim: dq 0
 
 ; Coordonees Pour Dessin
 x: dd 0
@@ -71,15 +71,15 @@ y: dd 0
 i: db 0
 
 ; Coordonees de la fractale
-x1: dd -2.1
-x2: dd 0.6
-y1: dd -1.2
-y2: dd 1.2
+x1: dq -2.1
+x2: dq 0.6
+y1: dq -1.2
+y2: dq 1.2
 
 ; Calculs de flottants:
 
-zero: dd 0.0
-deux: dd 2.0
+zero: dq 0.0
+deux: dq 2.0
 quatre: dq 4.0
 
 section .text
@@ -114,38 +114,41 @@ mov rcx,10
 
 mov dword[zoom], 100
 
-;définir image_x = (x2 - x1) * zoom
-;définir image_y = (y2 - y1) * zoom
+;;;définir image_x = (x2 - x1) * zoom
+;;;définir image_y = (y2 - y1) * zoom
 
-movss xmm0, [x2]
-movss xmm1, [y2]
+    movsd xmm0, [x2]
+    movsd xmm1, [y2]
 
-movss xmm3, [x1]
-movss xmm4, [y1]
+    movsd xmm3, [x1]
+    movsd xmm4, [y1]
 
-; xmm0 = x2
-; xmm1 = y2
-; xmm3 = x1
-; xmm4 = y1
+    ; xmm0 = x2
+    ; xmm1 = y2
+    ; xmm3 = x1
+    ; xmm4 = y1
 
-subss xmm0, xmm3
-subss xmm1, xmm4
-; xmm0 = x2-x1
-; xmm1 = y2-y1
+    subsd xmm0, xmm3
+    subsd xmm1, xmm4
+    ; xmm0 = x2-x1
+    ; xmm1 = y2-y1
 
-cvtsi2ss xmm5, [zoom]
-; xmm5 = zoom: conversion de zoom en float
+    cvtsi2sd xmm5, [zoom]
+    ; xmm5 = zoom: conversion de zoom en float
 
-mulss xmm0, xmm5
-mulss xmm1, xmm5
-; xmm0 = (x2-x1)*zoom
-; xmm1 = (y2-y1)*zoom
+    mulsd xmm0, xmm5
+    mulsd xmm1, xmm5
+    ; xmm0 = (x2-x1)*zoom
+    ; xmm1 = (y2-y1)*zoom
 
-cvtss2si r8,xmm0	; largeur (imageX): conversion de xmm0 en entier
-cvtss2si r9,xmm1	; hauteur (imageY): conversion de xmm1 en entier
+    cvtsd2si r8,xmm0	; largeur (imageX): conversion de xmm0 en entier
+    cvtsd2si r9,xmm1	; hauteur (imageY): conversion de xmm1 en entier
 
-mov qword[imageX], r8
-mov qword[imageY], r9
+    mov qword[imageX], r8
+    mov qword[imageY], r9
+
+;;;définir image_x = (x2 - x1) * zoom
+;;;définir image_y = (y2 - y1) * zoom
 
 push 0xFFFFFF	; background  0xRRGGBB
 push 0x00FF00
@@ -199,141 +202,172 @@ mov byte[maxIter], 50
 forEachColumn: ;for (x = 0; x < width; x++)
     mov dword[y], 0
     forEachLine: ;for (y = 0; y < height; y++)
-    ; cre = x / zoom + x1
-    ; cim = y / zoom + y1
     ; TODO (Prio: 100% MAX): Les calculs de CRE/CIM/ZRE/ZIM ne marchent pas
-    cvtsi2ss xmm0, [zoom]
-    cvtsi2ss xmm1, [x] ; xmm1 = x
-    cvtsi2ss xmm2, [y] ; xmm2 = y
 
-    divss xmm1, xmm0 ; xmm1 = x/zoom
-    divss xmm2, xmm0 ; xmm1 = y/zoom
+    ; Début: Initialisation des valeurs pour la boucle principale
 
-    addss xmm1, [x1] ; xmm1 += x1
-    addss xmm2, [y1] ; xmm2 += y1
+        ; Début:
+        ; cre = x / zoom + x1
+        ; cim = y / zoom + y1
+        ; c = cre + cim*i
+            cvtsi2sd xmm0, [zoom]
+            cvtsi2sd xmm1, [x] ; xmm1 = x
+            cvtsi2sd xmm2, [y] ; xmm2 = y
 
-    movss [cre], xmm1 ; cre = x / zoom + x
-    movss [cim], xmm1 ; cim = y / zoom + y1
+            divsd xmm1, xmm0 ; xmm1 = x/zoom
+            divsd xmm2, xmm0 ; xmm2 = y/zoom
 
-    ; c = cre + cim*i
+            addsd xmm1, [x1] ; xmm1 += x1
+            addsd xmm2, [y1] ; xmm2 += y1
 
-    movss xmm0, [zero]
-    movss [zre], xmm0
-    movss [zim], xmm0
-    ; z = 0 + 0i
+            movsd [cre], xmm1 ; cre = x / zoom + x
+            movsd [cim], xmm1 ; cim = y / zoom + y1
+        ; Fin:
+        ; cre = x / zoom + x1
+        ; cim = y / zoom + y1
+        ; c = cre + cim*i
 
-    mov byte[i], 0
-    ; iteration = 0
-        boucleDessin: ;do
-        movss xmm6, [zre] ; xmm6 --> temp = zre
+        ; Début:
+        ; zre = 0
+        ; zim = 0
+        ; z = 0 + 0i
+            movsd xmm0, [zero]
+            movsd [zre], xmm0
+            movsd [zim], xmm0
+        ;Fin:
+        ; zre = 0
+        ; zim = 0
+        ; z = 0 + 0i
 
-        ; zre = zre*zre - zim*zim + cre
+        mov byte[i], 0 ; iteration = 0
 
-        cvtss2sd xmm0, [zre]
-        movsd [sqr], xmm0
-        ; sqr[0] = zre après conversion en 64 bits
-
-        mulsd xmm0, [sqr]
-        movsd [sqr], xmm0
-        ; sqr[0] = zre²
-
-        cvtss2sd xmm0, [zim]
-        movsd [sqr+QWORD], xmm0
-        ; sqr[1] = zim après conversion en 64 bits
-
-        mulsd xmm0, [sqr+QWORD]
-        movsd [sqr+QWORD], xmm0
-        ; sqr[1] = zim²
-
-        movsd xmm0, [sqr]
-        subsd xmm0, [sqr+DWORD]
-        ; xmm0 = zre² - zim²
-        cvtss2sd xmm1, [cre]
-        addsd xmm0, xmm1
-        ; xmm0 = zre² - zim² + cre
-        cvtsd2ss xmm1, xmm0
-        movss [zre], xmm1
-        ; zre = zre² - zim² + cre
+    ; Fin: Initialisation des valeurs pour la boucle principale
 
 
-        ; zim = 2*zim*temp + cim
-        mulss xmm6, [deux]
-        mulss xmm6, [zim]
-        ; xmm6-->temp *= 2*zim
-        addss xmm6, [cim]
-        ; xmm6 = 2*zim*temp + cim
+        boucleDessin: ; --> do
+        movsd xmm6, [zre] ; xmm6 --> temp = zre
 
-        movss [zim], xmm6
-        ; zim = 2*zim*temp + cim
+        ; Début: zre = zre*zre - zim*zim + cre
+
+            ; Début: sqr[0] = zre²
+                movsd xmm0, [zre]
+                movsd [sqr], xmm0; sqr[0] = zre
+
+                mulsd xmm0, [sqr] ; xmm0 = zre²
+                movsd [sqr], xmm0 ; sqr[0] <-- xmm0 = zre²
+            ; Fin: sqr[0] = zre²
+
+            ; Début: sqr[1] = zim ²
+                movsd xmm0, [zim]
+                movsd [sqr+QWORD], xmm0 ; sqr[1] = zim
+
+                mulsd xmm0, [sqr+QWORD] ; xmm0 = zim²
+                movsd [sqr+QWORD], xmm0 ; sqr[1] <-- xmm0 = zim²
+            ; Fin: sqr[1] = zim²
+
+            ; Début: Additions:
+                movsd xmm0, [sqr] ; xmm0 <-- sqr[0] = zre²
+                subsd xmm0, [sqr+DWORD] ; xmm0 -= sqr[1] <-- zim²
+                addsd xmm0, [cre] ; xmm0 += cre
+                ; --> xmm0 = zre² - zim² + cre
+                movsd [zre], xmm0 ; zre <-- xmm0
+            ;Fin: Additions
+
+        ; Fin: zre = zre² - zim² + cre
+
+
+        ; Début: zim = 2*zim*temp + cim
+
+            mulsd xmm6, [deux] ;xmm6 = temp
+            mulsd xmm6, [zim]
+            ; xmm6 = temp*2*zim
+
+            addsd xmm6, [cim]
+            ; xmm6 = 2*zim*temp + cim
+
+            movsd [zim], xmm6 ; zim <-- xmm6
+
+        ; Fin: zim = 2*zim*temp + cim
 
 
         inc byte[i] ; i++
 
-        ; xmm5 = zre*zre + zim*zim
-         cvtss2sd xmm0, [zre]
-         movsd [sqr], xmm0
-         ; sqr[0] = zre après conversion en 64 bits
+        ; Début: xmm5 = zre*zre + zim*zim
 
-         mulsd xmm0, [sqr]
-         movsd [sqr], xmm0
+            ; Début: sqr[0] = zre²
+                movsd xmm0, [zre]
+                movsd [sqr], xmm0; sqr[0] = zre
 
-        ; sqr[0] = zre²
+                mulsd xmm0, [sqr] ; xmm0 = zre²
+                movsd [sqr], xmm0 ; sqr[0] <-- xmm0 = zre²
+            ; Fin: sqr[0] = zre²
 
-        cvtss2sd xmm0, [zim]
-        movsd [sqr+QWORD], xmm0
-        ; sqr[1] = zim après conversion en 64 bits
+            ; Début: sqr[1] = zim ²
+                movsd xmm0, [zim]
+                movsd [sqr+QWORD], xmm0 ; sqr[1] = zim
 
-        mulsd xmm0, [sqr+QWORD]
-        movsd [sqr+QWORD], xmm0
-         ; sqr[1] = zim²
+                mulsd xmm0, [sqr+QWORD] ; xmm0 = zim²
+                movsd [sqr+QWORD], xmm0 ; sqr[1] <-- xmm0 = zim²
+            ; Fin: sqr[1] = zim²
 
-        movsd xmm5, [sqr]
-        addsd xmm5, [sqr+QWORD]
-        ; xmm5 = zre*zre + zim*zim
+            movsd xmm5, [sqr] ; xmm5 <-- sqr[0] = zre²
+            addsd xmm5, [sqr+QWORD] ; xmm5 += zim²
+        ; Fin: xmm5 = zre*zre + zim*zim
+
+        ; while (zre*zre + zim*zim < 4 and i < maxIter)
+            ; (zre*zre + zim*zim < 4 and i < maxIter) = (!(zre*zre + zim*zim > 4) or !(i > maxIter))
+
+            ucomisd xmm5, [quatre] ; xmm5 > 4.0 ?
+            jae finBoucleDessin ; Oui: --> Fin Boucle (les deux conditions doivent être vrai)
+
+            ; and i < maxIter
+            mov r13b, byte[i]
+            cmp r13b, byte[maxIter] ; r13b(i) > maxIter ?
+            jae finBoucleDessin ; Oui: --> Fin Boucle (les deux conditions doivent être vrai)
+            jmp boucleDessin ; Non --> Les deux conditions sont vraies, le while continue et on retourne dans la boucle
 
         ; while zre*zre + zim*zim < 4 and i < maxIter
 
-        ucomisd xmm5, [quatre]
-        jae finBoucleDessin
-        ; and i < maxIter
-        mov r13b, byte[i]
-        cmp r13b, byte[maxIter]
-        jae finBoucleDessin
-        jmp boucleDessin
-
         finBoucleDessin:
-        mov r13b, byte[i]
-        cmp r13b, byte[maxIter] ;if i = maxIter
-        jne finForEach
+        ; if(i == maxIter)
+            ; if (!(i != maxIter))
 
-    mov r13b, byte[i]
-    cmp r13b, byte[maxIter] ;if i = maxIter
-    jne finForEach
-    ;;; Add Point TODO (Priorite Minimale) : Variation de couleurs
-    ; Point Color
-    mov rdi,qword[display_name]
-    mov rsi,qword[gc]
-    mov edx,0x000000	; Couleur: Noir
-    call XSetForeground
-    ; Draw Point
-    mov rdi,qword[display_name]
-    mov rsi,qword[window]
-    mov rdx,qword[gc]
-    mov ecx,dword[x]	; coordonnée source en x
-    mov r8d,dword[y]	; coordonnée source en y
-    call XDrawPoint
-    ; Fin Point
+            mov r13b, byte[i]
+            cmp r13b, byte[maxIter] ;if i = maxIter
+            jne finForEach
+            ; Si la condition n'est pas remplie, ça veut dire qu'on a quitté la boucle car zre*zre + zim*zim > 4
+            ; Dans ce cas là on ne dessine pas
+
+        ; if(i == maxIter)
+
+        ; Début: dessin:
+            ; TODO (Priorite Minimale) : Variation de couleurs
+            ; Point Color
+            mov rdi,qword[display_name]
+            mov rsi,qword[gc]
+            mov edx,0x000000	; Couleur: Noir
+            call XSetForeground
+            ; Draw Point
+            mov rdi,qword[display_name]
+            mov rsi,qword[window]
+            mov rdx,qword[gc]
+            mov ecx,dword[x]	; coordonnée source en x
+            mov r8d,dword[y]	; coordonnée source en y
+            call XDrawPoint
+        ; Fin: dessin:
+
     finForEach:
-    inc dword[y]
+    inc dword[y] ; y++
     mov r13,0
     mov r13d, dword[y]
-    cmp r13, qword[imageY]
-    jb forEachLine
-inc dword[x]
+    cmp r13, qword[imageY] ; y < imageY ?
+    jb forEachLine ; --> Continues la boucle for y
+    ; Sinon:
+inc dword[x] ; x ++
 mov r13,0
-mov r13d, dword[x]
-cmp r13, qword[imageX]
-jb forEachColumn
+mov r13d, dword[x] ; x < imageX ?
+cmp r13, qword[imageX] ; --> Continues la boucle for x
+jb forEachColumn; Sinon fin de l'image et du dessin
 
 ; ############################
 ; # FIN DE LA ZONE DE DESSIN #
