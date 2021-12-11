@@ -267,7 +267,7 @@ forEachColumn: ;for (x = 0; x < width; x++)
 
             ; Début: Additions:
                 movsd xmm0, [sqr] ; xmm0 <-- sqr[0] = zre²
-                subsd xmm0, [sqr+DWORD] ; xmm0 -= sqr[1] <-- zim²
+                subsd xmm0, [sqr+QWORD] ; xmm0 -= sqr[1] <-- zim²
                 addsd xmm0, [cre] ; xmm0 += cre
                 ; --> xmm0 = zre² - zim² + cre
                 movsd [zre], xmm0 ; zre <-- xmm0
@@ -332,6 +332,7 @@ forEachColumn: ;for (x = 0; x < width; x++)
         ; if(i == maxIter)
             ; if (!(i != maxIter))
 
+            mov r13,0
             mov r13b, byte[i]
             cmp r13b, byte[maxIter] ;if i = maxIter
             jne finForEach
