@@ -110,7 +110,7 @@ mov rsi,rbx
 mov rdx,10
 mov rcx,10
 
-;TODO: Scan for this instead
+;TODO (Priorité maximale): Scan for this instead
 
 mov dword[zoom], 100
 
@@ -202,7 +202,6 @@ mov byte[maxIter], 50
 forEachColumn: ;for (x = 0; x < width; x++)
     mov dword[y], 0
     forEachLine: ;for (y = 0; y < height; y++)
-    ; TODO (Prio: 100% MAX): Les calculs de CRE/CIM/ZRE/ZIM ne marchent pas
 
     ; Début: Initialisation des valeurs pour la boucle principale
 
@@ -342,7 +341,7 @@ forEachColumn: ;for (x = 0; x < width; x++)
         ; if(i == maxIter)
 
         ; Début: dessin:
-            ; TODO (Priorite Minimale) : Variation de couleurs
+            ; TODO (Priorite Maximale) : Variation de couleurs
             ; Point Color
             mov rdi,qword[display_name]
             mov rsi,qword[gc]
