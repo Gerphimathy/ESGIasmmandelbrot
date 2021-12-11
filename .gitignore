@@ -7,4 +7,5 @@
 *.lst
 *.o
 
+-fno-pie
 test/

@@ -221,7 +221,7 @@ forEachColumn: ;for (x = 0; x < width; x++)
             addsd xmm2, [y1] ; xmm2 += y1
 
             movsd [cre], xmm1 ; cre = x / zoom + x
-            movsd [cim], xmm1 ; cim = y / zoom + y1
+            movsd [cim], xmm2 ; cim = y / zoom + y1
         ; Fin:
         ; cre = x / zoom + x1
         ; cim = y / zoom + y1
