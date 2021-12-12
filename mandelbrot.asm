@@ -53,7 +53,15 @@ zoom: resd 1
 imageX: resq 1
 imageY: resq 1
 
+
+
 section .data
+
+; TODO (Priorité Minimale): choix de la couleur
+; Couleur
+
+rgbHex: times 3 db 0
+chosenHex: db 1
 
 event:		times	24 dq 0
 
@@ -334,14 +342,13 @@ forEachColumn: ;for (x = 0; x < width; x++)
             mov r13,0
             mov r13b, byte[i]
             cmp r13b, byte[maxIter] ;if i = maxIter
-            jne finForEach
+            jne dessinCouleur
             ; Si la condition n'est pas remplie, ça veut dire qu'on a quitté la boucle car zre*zre + zim*zim > 4
-            ; Dans ce cas là on ne dessine pas
-
+            ; Dans ce cas là on ne dessine pas en noir
         ; if(i == maxIter)
 
-        ; Début: dessin:
-            ; TODO (Priorite Maximale) : Variation de couleurs
+        dessinMaxIter:
+        ; Début: dessin noir
             ; Point Color
             mov rdi,qword[display_name]
             mov rsi,qword[gc]
@@ -354,7 +361,43 @@ forEachColumn: ;for (x = 0; x < width; x++)
             mov ecx,dword[x]	; coordonnée source en x
             mov r8d,dword[y]	; coordonnée source en y
             call XDrawPoint
-        ; Fin: dessin:
+            jmp finForEach
+        ; Fin: dessin noir
+
+        dessinCouleur:
+        ; Début: dessin couleur
+            ; Point Color
+            mov rdi,qword[display_name]
+            mov rsi,qword[gc]
+                ; Début: Calcul du code couleur = (i*255/maxIter)
+                    mov rax,0
+                    mov al, 255
+                    mul byte[i] ; résultat: i*255 --> ax (h:al)
+                    div byte[maxIter] ; résultat: ax/maxIter --> al
+                    movzx r15, byte[chosenHex]
+                    mov byte[rgbHex + r15*BYTE], al ; mise de la valeur hexa dans la case choisie (bleu/rouge/vert)
+                    mov rdx,0
+
+                    mov r15,0
+                    codeHexa: ; for (r15 = 0, r15 < 3, r15++)
+                    shl edx, 8; décalage de edx à gauche de 1 octet
+                    mov dl, byte[rgbHex + r15*BYTE] ; mise du code hexa (0 rouge,1 vert ou 2 bleu) dans dl
+
+                    inc r15 ; r15++
+                    cmp r15, 3
+                    jb codeHexa
+                ; Fin: Calcul du code couleur = (i*255/maxIter)
+            call XSetForeground
+
+            ; Draw Point
+            mov rdi,qword[display_name]
+            mov rsi,qword[window]
+            mov rdx,qword[gc]
+            mov ecx,dword[x]	; coordonnée source en x
+            mov r8d,dword[y]	; coordonnée source en y
+            call XDrawPoint
+            jmp finForEach
+        ; Fin: dessin couleur
 
     finForEach:
     inc dword[y] ; y++
