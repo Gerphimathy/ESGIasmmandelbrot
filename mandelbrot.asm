@@ -17,6 +17,7 @@ extern XDrawPoint
 ; external functions from stdio library (ld-linux-x86-64.so.2)    
 extern printf
 extern exit
+extern scanf
 
 %define	StructureNotifyMask	131072
 %define KeyPressMask		1
@@ -56,6 +57,10 @@ imageY: resq 1
 
 
 section .data
+
+; Scans:
+questionCouleur: db "Choisissez la couleur des points:",10,"0 - Rouge",10,"1 - Vert",10,"2 - Bleu",10,0
+scanCouleur: db "%hhd",0
 
 ; TODO (Priorité Minimale): choix de la couleur
 ; Couleur
@@ -119,6 +124,34 @@ mov rdx,10
 mov rcx,10
 
 ;TODO (Priorité maximale): Scan for this instead
+
+
+
+push rdi
+push rax
+push rsi
+scanHex:
+push rbp
+
+mov rdi, questionCouleur
+mov rax,0
+call printf
+
+pop rbp
+
+mov rdi, scanCouleur
+mov rsi, chosenHex
+call scanf
+
+cmp byte[chosenHex], 0
+jl scanHex
+cmp byte[chosenHex], 2
+jg scanHex
+
+pop rsi
+pop rax
+pop rdi
+
 
 mov dword[zoom], 100
 
